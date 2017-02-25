@@ -1,0 +1,2 @@
+0xb4d1d5f2	i40e_register_client	/home/dave/workspace/bada/i40e-1.6.24_rc3_X722/src/i40e	EXPORT_SYMBOL
+0x4732b122	i40e_unregister_client	/home/dave/workspace/bada/i40e-1.6.24_rc3_X722/src/i40e	EXPORT_SYMBOL

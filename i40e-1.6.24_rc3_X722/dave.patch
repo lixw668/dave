@@ -1,0 +1,76 @@
+2327a2328,2394
+> 
+> static int i40e_mdio_read(struct net_device *netdev, int prtad, int devad,
+> 			   u16 addr)
+> {
+> 	//struct i40e_adapter *adapter = netdev_priv(netdev);
+> 	//struct i40e_hw *hw = &adapter->hw;
+> 	struct i40e_netdev_priv *np = netdev_priv(netdev);
+> 	struct i40e_vsi *vsi = np->vsi;
+> 	struct i40e_hw *hw = &vsi->back->hw;
+> 	u16 value;
+> 	int rc;
+> 
+> 	if (prtad != hw->phy.addr)
+> 		return -EINVAL;
+> 	netdev_info(netdev, "i40e_mdio_read %d %d addr %d\n",
+> 		    prtad, devad,addr);
+> 	rc = i40e_read_phy_register(hw, addr, devad, &value);
+> 	/* read-phy
+> 	//rc = hw->phy.ops.read_reg(hw, addr, devad, &value);
+> 	i40e_status i40e_read_phy_register(struct i40e_hw *hw,
+> 				u8 page, u16 reg, u8 phy_addr, u16 *value)
+> 	i40e_status i40e_write_phy_register(struct i40e_hw *hw,
+> 				u8 page, u16 reg, u8 phy_addr, u16 value)
+> 	*/
+> 	if (!rc)
+> 		rc = value;
+> 	return rc;
+> }
+> 
+> static int i40e_mdio_write(struct net_device *netdev, int prtad, int devad,
+> 			    u16 addr, u16 value)
+> {
+> 	//struct i40e_adapter *adapter = netdev_priv(netdev);
+> 	//struct i40e_hw *hw = &adapter->hw;
+> 	struct i40e_netdev_priv *np = netdev_priv(netdev);
+> 	struct i40e_vsi *vsi = np->vsi;
+> 	struct i40e_hw *hw = &vsi->back->hw;
+> 	
+> 	netdev_info(netdev, "i40e_mdio_write %d %d addr %d\n",
+> 		    prtad, devad,addr);
+> 	if (prtad != hw->phy.addr)
+> 		return -EINVAL;
+> //	return hw->phy.ops.write_reg(hw, addr, devad, value);
+> 	return i40e_write_phy_register(hw, addr, devad, value);
+> }
+> 
+> static int i40e_mii_ioctl(struct net_device *netdev, struct ifreq *ifr,
+> 			   int cmd)
+> {
+> 	struct mii_ioctl_data *mii = (struct mii_ioctl_data *) &ifr->ifr_data;
+> 	int prtad, devad, ret;
+> 
+> 	prtad = (mii->phy_id & MDIO_PHY_ID_PRTAD) >> 5;
+> 	devad = (mii->phy_id & MDIO_PHY_ID_DEVAD);
+> 
+> 	if (cmd == SIOCGMIIREG) {
+> 		ret = i40e_mdio_read(netdev, prtad, devad, mii->reg_num);
+> 		if (ret < 0)
+> 			return ret;
+> 		mii->val_out = ret;
+> 		return 0;
+> 	} else {
+> 		return i40e_mdio_write(netdev, prtad, devad, mii->reg_num,
+> 					mii->val_in);
+> 	}
+> }
+> 
+2349a2417,2423
+> #ifdef ETHTOOL_OPS_COMPAT
+> 	case SIOCETHTOOL:
+> 		return ethtool_ioctl(ifr);
+> #endif
+> 	case SIOCGMIIREG:
+> 	case SIOCSMIIREG:
+> 		return i40e_mii_ioctl(netdev, ifr, cmd);
